@@ -45,7 +45,7 @@
 
   1. You have to define the bootloader sections and reset vector location
 
-  => Toolchain/AVR_GNU_Linker/Memory Settings 
+  => Toolchain/AVR_GNU_Linker/Memory Settings
   .bootreset=0x00
   .text=0xE00 // for 1KB Bootloader
   .text=0x0C00 // for 2KB Bootloader
@@ -96,52 +96,49 @@
 */
 /*
 
-			
+
            schematic for audio input
-           =========================			
-  	
-			          VCC	
-			           |	 
+           =========================
+
+                      VCC
+                       |
                       | | 10K
                       | |
                        |
-			           |
+                       |
  audio in >-----||-----o------->  soundprog ( digital input pin )
                100nF   |
-	                   |  
+                       |
                       | | 10K
                       | |
-			           |
+                       |
                       GND
 
 
 
                               Pinout ATtiny25/45/85
                               =====================
-			
-				
-	   			     _______
+
+
+                                     _______
                                     |   U   |
          (PCINT5/RESET/ADC0/dW) PB5-|       |- VCC
-  (PCINT3/XTAL1/CLKI/OC1B/ADC3) PB3-| ATTINY|- PB2 (SCK/USCK/SCL/ADC1/T0/INT0/PCINT2) 
-  (PCINT4/XTAL2/CLKO/OC1B/ADC2) PB4-|   85  |- PB1 (MISO/DO/AIN1/OC0B/OC1A/PCINT1) 
-                                GND-|       |- PB0 (MOSI/DI/SDA/AIN0/OC0A/OC1A/AREF/PCINT0)	 
+  (PCINT3/XTAL1/CLKI/OC1B/ADC3) PB3-| ATTINY|- PB2 (SCK/USCK/SCL/ADC1/T0/INT0/PCINT2)
+  (PCINT4/XTAL2/CLKO/OC1B/ADC2) PB4-|   85  |- PB1 (MISO/DO/AIN1/OC0B/OC1A/PCINT1)
+                                GND-|       |- PB0 (MOSI/DI/SDA/AIN0/OC0A/OC1A/AREF/PCINT0)
                                     |_______|
 
-				  
-				  
-	  			  Pinout ARDUINO  
-				  ==============
-                                     _______				  
-                                    |   U   |				  
-                          reset/PB5-|       |- VCC				  
-                 D3/A3          PB3-| ATTINY|- PB2       D2/A1				  
-    soundprog->  D4/A2          PB4-|   85  |- PB1       D1     -> ARDUINO_LED
-                                GND-|       |- PB0       D0
-                                    |_______|		
 
 
-				  
+                                 Pinout ARDUINO
+                                 ==============
+                                     _______
+                                    |   U   |
+                          reset/PB5-|       |- VCC
+    soundprog->  D3/A3          PB3-| ATTINY|- PB2       D2/A1
+                 D4/A2          PB4-|   85  |- PB1       D1
+                                GND-|       |- PB0       D0     -> ARDUINO_LED
+                                    |_______|
 */
 
 #include <avr/io.h>
@@ -156,9 +153,9 @@
 
 #define BOOTLOADER_ADDRESS     0x1BC0               // bootloader start address, e.g. 0x1C00 = 7168, set .text to 0x0E00
 
-//#define BOOTLOADER_ADDRESS     0x1800             // bootloader start address, e.g. 0x1800 = 6144, set .text to 0x0c00
+//#define BOOTLOADER_ADDRESS     0x1800               // bootloader start address, e.g. 0x1800 = 6144, set .text to 0x0c00
 
-#define RJMP                   (0xC000U - 1)          // opcode of RJMP minus offset 1
+#define RJMP                   (0xC000U - 1)        // opcode of RJMP minus offset 1
 #define RESET_SECTION          __attribute__((section(".bootreset"))) __attribute__((used))
 
 // this variable seems to be unused
@@ -168,47 +165,47 @@ uint16_t resetVector RESET_SECTION = RJMP + BOOTLOADER_ADDRESS / 2;
 
 #ifdef DEBUGON
 
-	#define DEBUGPIN       ( 1<<PB2 ) 
-	#define INITDEBUGPIN   { DDRB  |=  DEBUGPIN; }
+    #define DEBUGPIN       ( 1<<PB2 )
+    #define INITDEBUGPIN   { DDRB  |=  DEBUGPIN; }
 
-	#define DEBUGPINON     { PORTB |=  DEBUGPIN;}
-	#define DEBUGPINOFF    { PORTB &= ~DEBUGPIN;}
-	#define TOGGLEDEBUGPIN { PORTB ^=  DEBUGPIN;}
-	
+    #define DEBUGPINON     { PORTB |=  DEBUGPIN;}
+    #define DEBUGPINOFF    { PORTB &= ~DEBUGPIN;}
+    #define TOGGLEDEBUGPIN { PORTB ^=  DEBUGPIN;}
+
 #else
 
-	#define DEBUGPIN       
-	#define INITDEBUGPIN   
+    #define DEBUGPIN
+    #define INITDEBUGPIN
 
-	#define DEBUGPINON     
-	#define DEBUGPINOFF    
-	#define TOGGLEDEBUGPIN 
-	
+    #define DEBUGPINON
+    #define DEBUGPINOFF
+    #define TOGGLEDEBUGPIN
+
 #endif
-	
-	
+
+
 #define USELED
 #ifdef USELED
 
-	#define LEDPORT    ( 1<<PB1 ); //PB1 pin 6 Attiny85
-	#define INITLED    { DDRB|=LEDPORT; }
+    #define LEDPORT    ( 1<<PB0 ); // PB0 is ATTiny85 pin 5
+    #define INITLED    { DDRB|=LEDPORT; }
 
-	#define LEDON      { PORTB|=LEDPORT;}
-	#define LEDOFF     { PORTB&=~LEDPORT;}
-	#define TOGGLELED  { PORTB^=LEDPORT;}
+    #define LEDON      { PORTB|=LEDPORT;}
+    #define LEDOFF     { PORTB&=~LEDPORT;}
+    #define TOGGLELED  { PORTB^=LEDPORT;}
 
 #else
 
-	#define LEDPORT 
-	#define INITLED 
+    #define LEDPORT
+    #define INITLED
 
-	#define LEDON 
-	#define LEDOFF 
-	#define TOGGLELED 
+    #define LEDON
+    #define LEDOFF
+    #define TOGGLELED
 
 #endif
 
-#define INPUTAUDIOPIN (1<<PB3) //
+#define INPUTAUDIOPIN (1<<PB3) // PB3 is ATTiny85 pin 2
 #define PINVALUE (PINB&INPUTAUDIOPIN)
 #define INITAUDIOPORT {DDRB&=~INPUTAUDIOPIN;} // audio pin is input
 
@@ -233,8 +230,8 @@ uint16_t resetVector RESET_SECTION = RJMP + BOOTLOADER_ADDRESS / 2;
 #define PAGEINDEXHIGH   2  // page address higher part
 #define LENGTHLOW       3
 #define LENGTHHIGH      4
-#define CRCLOW          5  // checksum lower part 
-#define CRCHIGH         6  // checksum higher part 
+#define CRCLOW          5  // checksum lower part
+#define CRCHIGH         6  // checksum higher part
 #define DATAPAGESTART   7  // start of data
 #define PAGESIZE        SPM_PAGESIZE
 #define FRAMESIZE       (PAGESIZE+DATAPAGESTART) // size of the data block to be received
@@ -253,7 +250,7 @@ uint8_t FrameData[ FRAMESIZE ];
 #define BOOTLOADER_STARTADDRESS BOOTLOADER_ADDRESS    // start address:
 #define BOOTLOADER_ENDADDRESS   0x2000                // end address:   0x2000 = 8192
                                                       // this is the size of the Attiny85 flash in bytes
-													  
+
 #define LAST_PAGE (BOOTLOADER_STARTADDRESS - SPM_PAGESIZE) / SPM_PAGESIZE
 
 #include <avr/boot.h>
@@ -273,23 +270,26 @@ void (*start_appl_main) (void);
 //AVR ATtiny85 Programming: EEPROM Reading and Writing - YouTube
 //https://www.youtube.com/watch?v=DO-D6YmRpJk
 
-void eeprom_write(unsigned short address, unsigned char data)
+void
+eeprom_write(unsigned short address, unsigned char data)
 {
-   while(EECR & (1<<EEPE));
+    while(EECR & (1<<EEPE));
 
-   EECR = (0<<EEPM1) | (0<<EEPM0);
+    EECR = (0<<EEPM1) | (0<<EEPM0);
 
-   if (address < 512)
-   {
-      EEAR = address;
-   }else{
-      EEAR = 511;
-   }
+    if (address < 512)
+    {
+        EEAR = address;
+    }
+    else
+    {
+        EEAR = 511;
+    }
 
-   EEDR = data;
+    EEDR = data;
 
-   EECR |= (1<<EEMPE);
-   EECR |= (1<<EEPE);  
+    EECR |= (1<<EEMPE);
+    EECR |= (1<<EEPE);
 }
 
 //***************************************************************************************
@@ -303,93 +303,97 @@ void eeprom_write(unsigned short address, unsigned char data)
 //            uint8_t FramData: global data buffer
 //
 //***************************************************************************************
-uint8_t receiveFrame()
+uint8_t
+receiveFrame(void)
 {
-  //uint16_t store[16];
+    uint16_t counter = 0;
+    volatile uint16_t time = 0;
+    volatile uint16_t delayTime;
+    uint8_t p, t;
+    uint8_t k = 8;
+    uint8_t dataPointer = 0;
+    uint16_t n;
 
-  uint16_t counter = 0;
-  volatile uint16_t time = 0;
-  volatile uint16_t delayTime;
-  uint8_t p, t;
-  uint8_t k = 8;
-  uint8_t dataPointer = 0;
-  uint16_t n;
-
-  //*** synchronisation and bit rate estimation **************************
-  time = 0;
-  // wait for edge
-  p = PINVALUE;
-  while (p == PINVALUE);
-
-  p = PINVALUE;
-
-  TIMER = 0; // reset timer
-  for (n = 0; n < 16; n++)
-  {
+    //*** synchronisation and bit rate estimation **************************
+    time = 0;
     // wait for edge
-    while (p == PINVALUE);
-    t = TIMER;
+    p = PINVALUE;
+    while (p == PINVALUE)
+        ;
+
+    p = PINVALUE;
+
     TIMER = 0; // reset timer
-    p = PINVALUE;
+    for (n = 0; n < 16; n++)
+    {
+        // wait for edge
+        while (p == PINVALUE)
+            ;
 
-    //store[counter++] = t;
+        t = TIMER;
+        TIMER = 0; // reset timer
+        p = PINVALUE;
 
-    if (n >= 8)time += t; // time accumulator for mean period calculation only the last 8 times are used
-  }
+        if (n >= 8)
+        {
+            time += t; // time accumulator for mean period calculation only the last 8 times are used
+        }
+    }
 
-  delayTime = time * 3 / 4 / 8;
-  // delay 3/4 bit
-  while (TIMER < delayTime);
-
-  //p=1;
-
-  //****************** wait for start bit ***************************
-  while (p == PINVALUE) // while not startbit ( no change of pinValue means 0 bit )
-  {
-    // wait for edge
-    while (p == PINVALUE);
-    p = PINVALUE;
-    TIMER = 0;
-
+    delayTime = time * 3 / 4 / 8;
     // delay 3/4 bit
-    while (TIMER < delayTime);
-    TIMER = 0;
+    while (TIMER < delayTime)
+        ;
 
-    counter++;
-  }
-  p = PINVALUE;
-  
-  //****************************************************************
-  //receive data bits
-  k = 8;
-  for (n = 0; n < (FRAMESIZE * 8); n++)
-  {
-    // wait for edge
-    while (p == PINVALUE);
-    TIMER = 0;
+    //****************** wait for start bit ***************************
+    while (p == PINVALUE) // while not startbit ( no change of pinValue means 0 bit )
+    {
+        // wait for edge
+        while (p == PINVALUE)
+            ;
+        p = PINVALUE;
+        TIMER = 0;
+
+        // delay 3/4 bit
+        while (TIMER < delayTime)
+            ;
+        TIMER = 0;
+
+        counter++;
+    }
     p = PINVALUE;
 
-    // delay 3/4 bit
-    while (TIMER < delayTime);
+    //****************************************************************
+    //receive data bits
+    k = 8;
+    for (n = 0; n < (FRAMESIZE * 8); n++)
+    {
+        // wait for edge
+        while (p == PINVALUE)
+            ;
 
-    t = PINVALUE;
-	  
+        TIMER = 0;
+        p = PINVALUE;
 
-    counter++;
+        // delay 3/4 bit
+        while (TIMER < delayTime)
+            ;
 
-    FrameData[dataPointer] = FrameData[dataPointer] << 1;
-    if (p != t) FrameData[dataPointer] |= 1;
-    p = t;
-    k--;
-    if (k == 0) {
-      dataPointer++;
-      k = 8;
-    };
-  }
-  //uint16_t crc = (uint16_t)FrameData[CRCLOW] + FrameData[CRCHIGH] * 256;
-  
-  
-  return true;
+        t = PINVALUE;
+
+        counter++;
+
+        FrameData[dataPointer] = FrameData[dataPointer] << 1;
+        if (p != t) FrameData[dataPointer] |= 1;
+        p = t;
+        k--;
+        if (k == 0)
+        {
+            dataPointer++;
+            k = 8;
+        };
+    }
+    return true;
 }
 
 /*-----------------------------------------------------------------------------------------------------------------------
@@ -431,31 +435,31 @@ uint8_t receiveFrame()
 static void
 pgm_write_block (uint16_t flash_addr, uint16_t * block, size_t size)
 {
-  uint16_t        start_addr;
-  uint16_t        addr;
-  uint16_t        w;
-  uint8_t         idx = 0;
+    uint16_t        start_addr;
+    uint16_t        addr;
+    uint16_t        w;
+    uint8_t         idx = 0;
 
-  start_addr = (flash_addr / SPM_PAGESIZE) * SPM_PAGESIZE;        // round down (granularity is SPM_PAGESIZE)
+    start_addr = (flash_addr / SPM_PAGESIZE) * SPM_PAGESIZE;        // round down (granularity is SPM_PAGESIZE)
 
-  for (idx = 0; idx < SPM_PAGESIZE / 2; idx++)
-  {
-    addr = start_addr + 2 * idx;
-
-    if (addr >= flash_addr && size > 0)
+    for (idx = 0; idx < SPM_PAGESIZE / 2; idx++)
     {
-      w = *block++;
-      size -= sizeof (uint16_t);
-    }
-    else
-    {
-      w = pgm_read_word (addr);
+        addr = start_addr + 2 * idx;
+
+        if (addr >= flash_addr && size > 0)
+        {
+            w = *block++;
+            size -= sizeof (uint16_t);
+        }
+        else
+        {
+            w = pgm_read_word (addr);
+        }
+
+        boot_program_page_fill (addr, w);
     }
 
-    boot_program_page_fill (addr, w);
-  }
-
-  boot_program_page_erase_write(start_addr);                      // erase and write the page
+    boot_program_page_erase_write(start_addr);                      // erase and write the page
 }
 
 
@@ -467,207 +471,201 @@ pgm_write_block (uint16_t flash_addr, uint16_t * block, size_t size)
 //  input:     page address and data to be programmed
 //
 //***************************************************************************************
-void boot_program_page (uint32_t page, uint8_t *buf)
+void
+boot_program_page (uint32_t page, uint8_t *buf)
 {
-  uint16_t i;
-  cli(); // disable interrupts
+    uint16_t i;
+    cli(); // disable interrupts
 
-  boot_page_erase(page);
-  boot_spm_busy_wait ();      // Wait until the memory is erased.
+    boot_page_erase(page);
+    boot_spm_busy_wait ();      // Wait until the memory is erased.
 
-  for (i = 0; i < SPM_PAGESIZE; i += 2)
-  {
-    //read received data
-    uint16_t w = *buf++; //low section
-    w += (*buf++) << 8; //high section
-    //combine low and high to get 16 bit
-
-    //first page and first index is vector table... ( page 0 and index 0 )
-    if (page == 0 && i == 0)
+    for (i = 0; i < SPM_PAGESIZE; i += 2)
     {
-      
-      //1.save jump to application vector for later patching
-      void* appl = (void *)(w - RJMP);
-      start_appl_main =  ((void (*)(void)) appl);
+        //read received data
+        uint16_t w = *buf++; //low section
+        w += (*buf++) << 8; //high section
+        //combine low and high to get 16 bit
 
-      //2.replace w with jump vector to bootloader
-      w = 0xC000 + (BOOTLOADER_ADDRESS / 2) - 1;
+        //first page and first index is vector table... ( page 0 and index 0 )
+        if (page == 0 && i == 0)
+        {
+            //1.save jump to application vector for later patching
+            void* appl = (void *)(w - RJMP);
+            start_appl_main =  ((void (*)(void)) appl);
+
+            //2.replace w with jump vector to bootloader
+            w = 0xC000 + (BOOTLOADER_ADDRESS / 2) - 1;
+        }
+
+        boot_page_fill (page + i, w);
+        boot_spm_busy_wait();       // Wait until the memory is written.
     }
-    // else if (page == LAST_PAGE && i == 60)
-    // {
-      //3.retrieve saved reset vector
-      // w = saved_reset_vector;
-    // }
 
-    boot_page_fill (page + i, w);
+    boot_page_write (page);     // Store buffer in flash page.
     boot_spm_busy_wait();       // Wait until the memory is written.
-  }
-
-  boot_page_write (page);     // Store buffer in flash page.
-  boot_spm_busy_wait();       // Wait until the memory is written.
 }
 
-void resetRegister()
+void
+resetRegister()
 {
     DDRB = 0;
     cli();
     TCCR0B = 0; // turn off timer1
 }
 
-void exitBootloader()
-{  
-  memcpy_P (&start_appl_main, (PGM_P) BOOTLOADER_FUNC_ADDRESS, sizeof (start_appl_main));
+void
+exitBootloader()
+{
+    memcpy_P (&start_appl_main, (PGM_P) BOOTLOADER_FUNC_ADDRESS, sizeof (start_appl_main));
 
-  if (start_appl_main)
-  {
-    resetRegister();
-    (*start_appl_main) ();
-  }
+    if (start_appl_main)
+    {
+        resetRegister();
+        (*start_appl_main) ();
+    }
 }
 
-void runProgramm(void)
+void
+runProgramm(void)
 {
-  // reintialize registers to default
-  resetRegister();
+    // reintialize registers to default
+    resetRegister();
 
-  pgm_write_block (BOOTLOADER_FUNC_ADDRESS, (uint16_t *) &start_appl_main, sizeof (start_appl_main));
+    pgm_write_block (BOOTLOADER_FUNC_ADDRESS, (uint16_t *) &start_appl_main, sizeof (start_appl_main));
 
-  start_appl_main();
+    start_appl_main();
 }
 
 //***************************************************************************************
 // main loop
 //***************************************************************************************
-static inline void a_main()
+static inline void
+a_main()
 {
-  uint8_t p;
-  uint16_t time = WAITBLINKTIME;
-  uint8_t timeout = BOOT_TIMEOUT;
+    uint8_t p;
+    uint16_t time = WAITBLINKTIME;
+    uint8_t timeout = BOOT_TIMEOUT;
 
-  p = PINVALUE;
+    p = PINVALUE;
 
-  //*************** wait for toggling input pin or timeout ******************************
-  uint8_t exitcounter = 3;
-  while (1)
-  {
-
-    if (TIMER > 100) // timedelay ==> frequency @16MHz= 16MHz/8/100=20kHz
+    //*************** wait for toggling input pin or timeout ******************************
+    uint8_t exitcounter = 3;
+    while (1)
     {
-      TIMER = 0;
-      time--;
-      if (time == 0)
-      {
-        TOGGLELED;
-
-        time = WAITBLINKTIME;
-        timeout--;
-        if (timeout == 0)
+        if (TIMER > 100) // timedelay ==> frequency @16MHz= 16MHz/8/100=20kHz
         {
-          LEDOFF; // timeout,
-          // leave bootloader and run program
-          exitBootloader();
-        }
-      }
-    }
-    if (p != PINVALUE)
-    {
-      p = PINVALUE;
-      exitcounter--;
-    }
-    if (exitcounter == 0) break; // signal received, leave this loop and go on
-  }
-  //*************** start command interpreter *************************************
-  LEDON;
-  while (1)
-  {
-    if (!receiveFrame())
-    {
-      //*****  if data transfer error: blink fast, press reset to restart *******************
-
-      while (1)
-      {
-        if (TIMER > 100) // timerstop ==> frequency @16MHz= 16MHz/8/100=20kHz
-        {
-          TIMER = 0;
-          time--;
-          if (time == 0)
-          {
-            TOGGLELED;
-            time = 1000;
-          }
-        }
-      }
-    }
-    else // succeed
-    {
-      switch (FrameData[COMMAND])
-      {
-
-        case PROGCOMMAND:
-        {
-            uint16_t pageNumber = (((uint16_t)FrameData[PAGEINDEXHIGH]) << 8) + FrameData[PAGEINDEXLOW];
-			      uint16_t address=SPM_PAGESIZE * pageNumber;
-			
-            if( address < BOOTLOADER_ADDRESS) // prevent bootloader form self killing
-        		{
-        			boot_program_page (address, FrameData + DATAPAGESTART);  // erase and program page
-        			TOGGLELED;
-        		}
-        }
-        break;
-
-        case RUNCOMMAND:
-        {
-            // after programming leave bootloader and run program
-            runProgramm();
-        }
-        break;
-
-        // case EXITCOMMAND:
-        // {
-        //     // after programming leave bootloader and run program
-        //     exitBootloader();
-        // }
-        // break;
-
-        case EEPROMCOMMAND:
-        {
-            uint8_t pageNumber = FrameData[PAGEINDEXLOW];
-            uint8_t data_length = FrameData[LENGTHLOW];
-            uint8_t address = SPM_PAGESIZE * pageNumber;
-
-            uint8_t *buf = FrameData + DATAPAGESTART;
-            
-            for (uint8_t i = 0; i < data_length; i++)
+            TIMER = 0;
+            time--;
+            if (time == 0)
             {
-              //write received data to EEPROM
-              uint8_t w = *buf++;
-              eeprom_write(address + i, w);
+                TOGGLELED;
+
+                time = WAITBLINKTIME;
+                timeout--;
+                if (timeout == 0)
+                {
+                    LEDOFF; // timeout,
+                    // leave bootloader and run program
+                    exitBootloader();
+                }
             }
-
-            //Leave bootloader after eeprom signal received
-            //todo: wait until all data sent > spm pagesize (64)
-            //fix this!!!!
-            LEDOFF;
-            exitBootloader();
-
         }
-        break;
-      }
-      FrameData[COMMAND] = NOCOMMAND; // delete command
+
+        if (p != PINVALUE)
+        {
+            p = PINVALUE;
+            exitcounter--;
+        }
+        if (exitcounter == 0)
+        {
+            break; // signal received, leave this loop and go on
+        }
     }
-  }
+
+    //*************** start command interpreter *************************************
+    LEDON;
+    while (1)
+    {
+        if (!receiveFrame())
+        {
+            //*****  if data transfer error: blink fast, press reset to restart *******************
+            while (1)
+            {
+                if (TIMER > 100) // timerstop ==> frequency @16MHz= 16MHz/8/100=20kHz
+                {
+                    TIMER = 0;
+                    time--;
+                    if (time == 0)
+                    {
+                        TOGGLELED;
+                        time = 1000;
+                    }
+                }
+            }
+        }
+        else // succeed
+        {
+            switch (FrameData[COMMAND])
+            {
+                case PROGCOMMAND:
+                {
+                    uint16_t pageNumber = (((uint16_t)FrameData[PAGEINDEXHIGH]) << 8) + FrameData[PAGEINDEXLOW];
+                    uint16_t address=SPM_PAGESIZE * pageNumber;
+
+                    if( address < BOOTLOADER_ADDRESS) // prevent bootloader form self killing
+                    {
+                        boot_program_page(address, FrameData + DATAPAGESTART);  // erase and program page
+                        TOGGLELED;
+                    }
+                }
+                break;
+
+                case RUNCOMMAND:
+                {
+                    // after programming leave bootloader and run program
+                    runProgramm();
+                }
+                break;
+
+                case EEPROMCOMMAND:
+                {
+                    uint8_t pageNumber = FrameData[PAGEINDEXLOW];
+                    uint8_t data_length = FrameData[LENGTHLOW];
+                    uint8_t address = SPM_PAGESIZE * pageNumber;
+
+                    uint8_t *buf = FrameData + DATAPAGESTART;
+
+                    for (uint8_t i = 0; i < data_length; i++)
+                    {
+                        //write received data to EEPROM
+                        uint8_t w = *buf++;
+                        eeprom_write(address + i, w);
+                    }
+
+                    //Leave bootloader after eeprom signal received
+                    //todo: wait until all data sent > spm pagesize (64)
+                    //fix this!!!!
+                    LEDOFF;
+                    exitBootloader();
+                }
+                break;
+            }
+            FrameData[COMMAND] = NOCOMMAND; // delete command
+        }
+    }
 }
 
-int main()
+int
+main(void)
 {
-  INITDEBUGPIN
-  INITLED;
-  INITAUDIOPORT;
+    INITDEBUGPIN
+    INITLED;
+    INITAUDIOPORT;
 
-  // Timer 2 normal mode, clk/8, count up from 0 to 255
-  // ==> frequency @16MHz= 16MHz/8/256=7812.5Hz
-  TCCR0B = _BV(CS01);
+    // Timer 2 normal mode, clk/8, count up from 0 to 255
+    // ==> frequency @16MHz= 16MHz/8/256=7812.5Hz
+    TCCR0B = _BV(CS01);
 
-  a_main(); // start the main function
+    a_main(); // start the main function
 }
