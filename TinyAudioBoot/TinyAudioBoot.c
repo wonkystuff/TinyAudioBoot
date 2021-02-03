@@ -136,8 +136,8 @@
                                     |   U   |
                           reset/PB5-|       |- VCC
     soundprog->  D3/A3          PB3-| ATTINY|- PB2       D2/A1
-                 D4/A2          PB4-|   85  |- PB1       D1
-                                GND-|       |- PB0       D0     -> ARDUINO_LED
+                 D4/A2          PB4-|   85  |- PB1       D1     -> ARDUINO_LED
+                                GND-|       |- PB0       D0     -> BOOTCHECK
                                     |_______|
 */
 
@@ -187,7 +187,7 @@ uint16_t resetVector RESET_SECTION = RJMP + BOOTLOADER_ADDRESS / 2;
 #define USELED
 #ifdef USELED
 
-    #define LEDPORT    ( 1<<PB0 ); // PB0 is ATTiny85 pin 5
+    #define LEDPORT    ( 1<<PB1 ); // PB0 is ATTiny85 pin 6
     #define INITLED    { DDRB|=LEDPORT; }
 
     #define LEDON      { PORTB|=LEDPORT;}
@@ -204,6 +204,9 @@ uint16_t resetVector RESET_SECTION = RJMP + BOOTLOADER_ADDRESS / 2;
     #define TOGGLELED
 
 #endif
+
+#define BOOTCHECKPIN  (1<<PB0)
+#define INITBOOTCHECK {DDRB &= ~BOOTCHECKPIN; PORTB |= BOOTCHECKPIN; } // boot-check pin is input
 
 #define INPUTAUDIOPIN (1<<PB3) // PB3 is ATTiny85 pin 2
 #define PINVALUE (PINB&INPUTAUDIOPIN)
@@ -545,46 +548,30 @@ a_main()
 {
     uint8_t p;
     uint16_t time = WAITBLINKTIME;
-    uint8_t timeout = BOOT_TIMEOUT;
 
     p = PINVALUE;
 
-    //*************** wait for toggling input pin or timeout ******************************
-    uint8_t exitcounter = 3;
-    while (1)
+    // wait whilst the reset button is held down (and turn on the LED to say that we're waiting)
+    uint32_t lPress=0;
+    while (!(PINB & BOOTCHECKPIN))
     {
-        if (TIMER > 100) // timedelay ==> frequency @16MHz= 16MHz/8/100=20kHz
+        LEDON;           // Switch on the LED
+        if (++lPress > 3000000)         // pretty arbitrary count
         {
-            TIMER = 0;
-            time--;
-            if (time == 0)
-            {
-                TOGGLELED;
+            // Wait for audio bootloader shenanigans
+            break;
+        }
+    }
+    LEDOFF;
 
-                time = WAITBLINKTIME;
-                timeout--;
-                if (timeout == 0)
-                {
-                    LEDOFF; // timeout,
-                    // leave bootloader and run program
-                    exitBootloader();
-                }
-            }
-        }
-
-        if (p != PINVALUE)
-        {
-            p = PINVALUE;
-            exitcounter--;
-        }
-        if (exitcounter == 0)
-        {
-            break; // signal received, leave this loop and go on
-        }
+    if (lPress < 3000000)
+    {
+        // leave bootloader and run program
+        exitBootloader();
     }
 
     //*************** start command interpreter *************************************
-    LEDON;
+
     while (1)
     {
         if (!receiveFrame())
@@ -662,6 +649,7 @@ main(void)
     INITDEBUGPIN
     INITLED;
     INITAUDIOPORT;
+    INITBOOTCHECK;
 
     // Timer 2 normal mode, clk/8, count up from 0 to 255
     // ==> frequency @16MHz= 16MHz/8/256=7812.5Hz
