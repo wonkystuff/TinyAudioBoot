@@ -85,6 +85,7 @@
   v3.0  30.1.2017 B. -P-r-a-k-o-s-a-  first version of Attiny85 Audio Bootloader
   v3.1  04.2.2017 C. -H-A-B-E-R-E-R-  clean reset vector added, description added, pins rerouted
   v3.2  18.7.2017 C. -P-r-a-k-o-s-a-  various refactor, added eeprom write mode, makefile for compiling using arduino ide toolchain
+  v3.3  03.02.2021 J. T-u-f-f-e-n-    bootloader entered if button pressed rather than time-delayed.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -165,21 +166,21 @@ uint16_t resetVector RESET_SECTION = RJMP + BOOTLOADER_ADDRESS / 2;
 
 #ifdef DEBUGON
 
-    #define DEBUGPIN       ( 1<<PB2 )
-    #define INITDEBUGPIN   { DDRB  |=  DEBUGPIN; }
+    #define DEBUGPIN         ( 1<<PB2 )
+    #define INITDEBUGPIN()   { DDRB  |=  DEBUGPIN; }
 
-    #define DEBUGPINON     { PORTB |=  DEBUGPIN;}
-    #define DEBUGPINOFF    { PORTB &= ~DEBUGPIN;}
-    #define TOGGLEDEBUGPIN { PORTB ^=  DEBUGPIN;}
+    #define DEBUGPINON()     { PORTB |=  DEBUGPIN;}
+    #define DEBUGPINOFF()    { PORTB &= ~DEBUGPIN;}
+    #define TOGGLEDEBUGPIN() { PORTB ^=  DEBUGPIN;}
 
 #else
 
     #define DEBUGPIN
-    #define INITDEBUGPIN
+    #define INITDEBUGPIN()
 
-    #define DEBUGPINON
-    #define DEBUGPINOFF
-    #define TOGGLEDEBUGPIN
+    #define DEBUGPINON()
+    #define DEBUGPINOFF()
+    #define TOGGLEDEBUGPIN()
 
 #endif
 
@@ -187,39 +188,39 @@ uint16_t resetVector RESET_SECTION = RJMP + BOOTLOADER_ADDRESS / 2;
 #define USELED
 #ifdef USELED
 
-    #define LEDPORT    ( 1<<PB1 ); // PB0 is ATTiny85 pin 6
-    #define INITLED    { DDRB|=LEDPORT; }
+    #define LEDPORT      ( 1<<PB1 ); // PB0 is ATTiny85 pin 6
+    #define INITLED()    { DDRB|=LEDPORT; }
 
-    #define LEDON      { PORTB|=LEDPORT;}
-    #define LEDOFF     { PORTB&=~LEDPORT;}
-    #define TOGGLELED  { PORTB^=LEDPORT;}
+    #define LEDON()      { PORTB|=LEDPORT;}
+    #define LEDOFF()     { PORTB&=~LEDPORT;}
+    #define TOGGLELED()  { PORTB^=LEDPORT;}
 
 #else
 
     #define LEDPORT
-    #define INITLED
+    #define INITLED()
 
-    #define LEDON
-    #define LEDOFF
-    #define TOGGLELED
+    #define LEDON()
+    #define LEDOFF()
+    #define TOGGLELED()
 
 #endif
 
-#define BOOTCHECKPIN  (1<<PB0)
-#define INITBOOTCHECK {DDRB &= ~BOOTCHECKPIN; PORTB |= BOOTCHECKPIN; } // boot-check pin is input
+#define BOOTCHECKPIN    (1<<PB0)
+#define INITBOOTCHECK() {DDRB &= ~BOOTCHECKPIN; PORTB |= BOOTCHECKPIN; } // boot-check pin is input
 
-#define INPUTAUDIOPIN (1<<PB3) // PB3 is ATTiny85 pin 2
-#define PINVALUE (PINB&INPUTAUDIOPIN)
-#define INITAUDIOPORT {DDRB&=~INPUTAUDIOPIN;} // audio pin is input
+#define INPUTAUDIOPIN   (1<<PB3) // PB3 is ATTiny85 pin 2
+#define PINVALUE        (PINB&INPUTAUDIOPIN)
+#define INITAUDIOPORT() {DDRB&=~INPUTAUDIOPIN;} // audio pin is input
 
-#define PINLOW (PINVALUE==0)
-#define PINHIGH (!PINLOW)
+#define PINLOW          (PINVALUE==0)
+#define PINHIGH         (!PINLOW)
 
-#define WAITBLINKTIME 10000
-#define BOOT_TIMEOUT  10
+#define WAITBLINKTIME   10000
+#define BOOT_TIMEOUT    10
 
-#define true (1==1)
-#define false !true
+#define true            (1==1)
+#define false           (!true)
 
 //***************************************************************************************
 // main loop
@@ -544,7 +545,7 @@ runProgramm(void)
 // main loop
 //***************************************************************************************
 static inline void
-a_main()
+a_main(void)
 {
     uint8_t p;
     uint16_t time = WAITBLINKTIME;
@@ -555,14 +556,14 @@ a_main()
     uint32_t lPress=0;
     while (!(PINB & BOOTCHECKPIN))
     {
-        LEDON;           // Switch on the LED
+        LEDON();           // Switch on the LED
         if (++lPress > 3000000)         // pretty arbitrary count
         {
             // Wait for audio bootloader shenanigans
             break;
         }
     }
-    LEDOFF;
+    LEDOFF();
 
     if (lPress < 3000000)
     {
@@ -585,7 +586,7 @@ a_main()
                     time--;
                     if (time == 0)
                     {
-                        TOGGLELED;
+                        TOGGLELED();
                         time = 1000;
                     }
                 }
@@ -603,7 +604,7 @@ a_main()
                     if( address < BOOTLOADER_ADDRESS) // prevent bootloader form self killing
                     {
                         boot_program_page(address, FrameData + DATAPAGESTART);  // erase and program page
-                        TOGGLELED;
+                        TOGGLELED();
                     }
                 }
                 break;
@@ -633,7 +634,7 @@ a_main()
                     //Leave bootloader after eeprom signal received
                     //todo: wait until all data sent > spm pagesize (64)
                     //fix this!!!!
-                    LEDOFF;
+                    LEDOFF();
                     exitBootloader();
                 }
                 break;
@@ -646,10 +647,10 @@ a_main()
 int
 main(void)
 {
-    INITDEBUGPIN
-    INITLED;
-    INITAUDIOPORT;
-    INITBOOTCHECK;
+    INITDEBUGPIN();
+    INITLED();
+    INITAUDIOPORT();
+    INITBOOTCHECK();
 
     // Timer 2 normal mode, clk/8, count up from 0 to 255
     // ==> frequency @16MHz= 16MHz/8/256=7812.5Hz
