@@ -1,5 +1,13 @@
 # TinyAudioBoot
-Audio Bootloader for Attiny85 Microcontrollers
+
+TinyAudioBoot is a bootloader for Attiny85 Microcontrollers allowing you to relive those
+halcyon '80s days of loading programs from cassette. Except you'll be able to do it from
+Soundcloud. Or something.
+
+This fork exists because we at wonkystuff want to play with using this in our Core1 platform,
+but we have a couple of changes we'd like to make so here we are…
+
+Back to the regular programme:
 
 ## What?
 
