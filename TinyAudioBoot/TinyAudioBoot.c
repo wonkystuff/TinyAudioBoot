@@ -1,5 +1,4 @@
 /*
-
   AudioBoot - flashing a microcontroller by PC audio line out
 
   Originally the bootloader was made for Atmega8 and Atmega168 microcontrollers.
@@ -149,12 +148,14 @@
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
 
+// Configuration options
+#define WONKYSTUFF  (1)
+#define USELED      (1)
+
 // This value has to be adapted to the bootloader size
 // If you change this, please change BOOTLOADER_ADDRESS on Makefile too
 
 #define BOOTLOADER_ADDRESS     0x1BC0               // bootloader start address, e.g. 0x1C00 = 7168, set .text to 0x0E00
-
-//#define BOOTLOADER_ADDRESS     0x1800               // bootloader start address, e.g. 0x1800 = 6144, set .text to 0x0c00
 
 #define RJMP                   (0xC000U - 1)        // opcode of RJMP minus offset 1
 #define RESET_SECTION          __attribute__((section(".bootreset"))) __attribute__((used))
@@ -164,31 +165,9 @@
 // you could find it in the *.hex file
 uint16_t resetVector RESET_SECTION = RJMP + BOOTLOADER_ADDRESS / 2;
 
-#ifdef DEBUGON
-
-    #define DEBUGPIN         ( 1<<PB2 )
-    #define INITDEBUGPIN()   { DDRB  |=  DEBUGPIN; }
-
-    #define DEBUGPINON()     { PORTB |=  DEBUGPIN;}
-    #define DEBUGPINOFF()    { PORTB &= ~DEBUGPIN;}
-    #define TOGGLEDEBUGPIN() { PORTB ^=  DEBUGPIN;}
-
-#else
-
-    #define DEBUGPIN
-    #define INITDEBUGPIN()
-
-    #define DEBUGPINON()
-    #define DEBUGPINOFF()
-    #define TOGGLEDEBUGPIN()
-
-#endif
-
-
-#define USELED
 #ifdef USELED
 
-    #define LEDPORT      ( 1<<PB1 ); // PB0 is ATTiny85 pin 6
+    #define LEDPORT      ( 1<<PB1 ); // PB1 is ATTiny85 pin 6
     #define INITLED()    { DDRB|=LEDPORT; }
 
     #define LEDON()      { PORTB|=LEDPORT;}
@@ -206,8 +185,10 @@ uint16_t resetVector RESET_SECTION = RJMP + BOOTLOADER_ADDRESS / 2;
 
 #endif
 
+#ifdef WONKYSTUFF
 #define BOOTCHECKPIN    (1<<PB0)
 #define INITBOOTCHECK() {DDRB &= ~BOOTCHECKPIN; PORTB |= BOOTCHECKPIN; } // boot-check pin is input
+#endif
 
 #define INPUTAUDIOPIN   (1<<PB3) // PB3 is ATTiny85 pin 2
 #define PINVALUE        (PINB&INPUTAUDIOPIN)
@@ -552,6 +533,7 @@ a_main(void)
 
     p = PINVALUE;
 
+#ifdef WONKYSTUFF
     // wait whilst the reset button is held down (and turn on the LED to say that we're waiting)
     uint32_t lPress=0;
     while (!(PINB & BOOTCHECKPIN))
@@ -570,6 +552,42 @@ a_main(void)
         // leave bootloader and run program
         exitBootloader();
     }
+#else
+  uint8_t timeout = BOOT_TIMEOUT;
+
+  p = PINVALUE;
+
+  //*************** wait for toggling input pin or timeout ******************************
+  uint8_t exitcounter = 3;
+  while (1)
+  {
+    if (TIMER > 100) // timedelay ==> frequency @16MHz= 16MHz/8/100=20kHz
+    {
+      TIMER = 0;
+      time--;
+      if (time == 0)
+      {
+        TOGGLELED();
+
+        time = WAITBLINKTIME;
+        timeout--;
+        if (timeout == 0)
+        {
+          LEDOFF(); // timeout,
+          // leave bootloader and run program
+          exitBootloader();
+        }
+      }
+    }
+    if (p != PINVALUE)
+    {
+      p = PINVALUE;
+      exitcounter--;
+    }
+    if (exitcounter == 0) break; // signal received, leave this loop and go on
+  }
+
+#endif  // !WONKYSTUFF
 
     //*************** start command interpreter *************************************
 
@@ -647,10 +665,11 @@ a_main(void)
 int
 main(void)
 {
-    INITDEBUGPIN();
     INITLED();
     INITAUDIOPORT();
+#ifdef WONKYSTUFF
     INITBOOTCHECK();
+#endif
 
     // Timer 2 normal mode, clk/8, count up from 0 to 255
     // ==> frequency @16MHz= 16MHz/8/256=7812.5Hz
