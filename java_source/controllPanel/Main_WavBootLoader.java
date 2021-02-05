@@ -1,9 +1,9 @@
 /*
- * 
+ *
 	wave generator for audio bootloader
-	
-	main startup / GUI-interface 
-	
+
+	main startup / GUI-interface
+
 	(c) -C-H-R-I-S-T-O-P-H-   -H-A-B-E-R-E-R- 2011
 
 	This program is free software; you can redistribute it and/or modify
@@ -36,11 +36,11 @@ import wavCreator.WavCodeGenerator;
 import waveFile.AePlayWave;
 
 public class Main_WavBootLoader extends JPanel{
-		
+
 	static final long serialVersionUID = 1L;
 	public JFrame frame;
 	public JTextArea messageText;
-	
+
 	//%Variable_Section%//
 	public JButton   button_InputHexFile;
 	public JButton   button_ouputWavFile;
@@ -48,7 +48,7 @@ public class Main_WavBootLoader extends JPanel{
 	public JCheckBox speedCheckBox;
 	public JTextArea testText;
 	public Model_ProgrammParameters setupData;
-	
+
 	public void showMainWindow()
 	{
 		speedCheckBox = new JCheckBox("slow");
@@ -56,21 +56,21 @@ public class Main_WavBootLoader extends JPanel{
 		frame= new JFrame(); // create main window
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setTitle("WavBootWriter");
-		frame.getContentPane().setLayout(null); // kein Layout Manager für freie Größenwahl
-		
+		frame.getContentPane().setLayout(null); // kein Layout Manager fur freie Gruenwahl
+
 		JPanel panel        = new JPanel();
 		panel.setLayout(new BoxLayout(panel,BoxLayout.Y_AXIS));
-		
+
 		messageText         = new JTextArea(5,20); // Lauftext Fenster
-	
-		messageText.setBounds(100,200,200,250);	
+
+		messageText.setBounds(100,200,200,250);
 
 		button_InputHexFile = new JButton("select hexfile");
 		button_ouputWavFile = new JButton("wav filename");
 		button_writeWav     = new JButton("play wav file");
 		button_writeWav.setBackground(Color.GREEN);
 		//button_writeWav.setForeground(Color.GRAY);
-		
+
 		inputHexFile_ButtonListener inputHexFileButtonListener = new inputHexFile_ButtonListener();
 		button_InputHexFile.addActionListener(inputHexFileButtonListener);
 
@@ -82,7 +82,7 @@ public class Main_WavBootLoader extends JPanel{
 		JScrollPane scrollText=new JScrollPane(testText);
 		scrollText.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		//scrollText.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-		
+
 		// alle Panels in Hauptframe einbauen
 	  	frame.setLayout(new BorderLayout(5,5));
 		panel.add(button_InputHexFile);
@@ -92,10 +92,10 @@ public class Main_WavBootLoader extends JPanel{
 		frame.add(scrollText,BorderLayout.CENTER);
 
         panel.add(speedCheckBox);
-        
+
 		frame.setSize(640,480);
 		frame.setVisible(true);
-		
+
 		testText.append("selected hex-file:\n");
 		testText.append(setupData.getInputHexFile().getAbsolutePath());
 		testText.append("\n\n");
@@ -103,10 +103,10 @@ public class Main_WavBootLoader extends JPanel{
 		testText.append(setupData.getOutputWavFile().getAbsolutePath());
 		testText.append("\n");
 	}
-	
+
 	public Main_WavBootLoader()
 	{
-		setupData=new Model_ProgrammParameters(); 
+		setupData=new Model_ProgrammParameters();
 	}
 
 	public static String getBaseName(String fileName) {
@@ -119,7 +119,7 @@ public class Main_WavBootLoader extends JPanel{
 	}
 	class inputHexFile_ButtonListener implements ActionListener
 	{
-	
+
 		public void actionPerformed(ActionEvent e) {
 			System.out.println(e.getActionCommand());
 
@@ -133,7 +133,7 @@ public class Main_WavBootLoader extends JPanel{
 				e1.printStackTrace();
 			}
         	JFileChooser fc = new JFileChooser(ff);
-        
+
         	fc.setFileFilter(new FileFilter()
         	{
         		@Override public boolean accept ( File f)
@@ -143,32 +143,32 @@ public class Main_WavBootLoader extends JPanel{
         		@Override public String getDescription()
         		{
         			return "Hex-Files";
-        		}	        		
+        		}
         	});
-        	
+
         	int state=fc.showOpenDialog(null);
         	if(state==JFileChooser.APPROVE_OPTION)
         	{
         		File file=fc.getSelectedFile();
-    			
+
         		testText.append("selected hexfile:\n");
         		testText.append(file.getAbsolutePath());
         		setupData.setInputHexFile(file);
-        		
+
         		String outputFileName=getBaseName( file.getName() )+".wav";
         		System.out.println("output file name:"+outputFileName);
-        		setupData.setOutputWavFile( new File( outputFileName ) ); 
-        	};	
-		}	
+        		setupData.setOutputWavFile( new File( outputFileName ) );
+        	};
+		}
 	}
-	
+
 	class writeWav_ButtonListener implements ActionListener
-	{		
-		public void actionPerformed(ActionEvent e) 
+	{
+		public void actionPerformed(ActionEvent e)
 		{
 			System.out.println(e.getActionCommand());
 			testText.append("\nconverting hex to wav\n");
-			try 
+			try
 			{
 				WavCodeGenerator wg=new WavCodeGenerator();
 				wg.setSignalSpeed(!speedCheckBox.isSelected());
@@ -178,7 +178,7 @@ public class Main_WavBootLoader extends JPanel{
 				e1.printStackTrace();
 			}
 			testText.append("done\n");
-			
+
 			testText.append("playing wav-file\n");
         	new AePlayWave(setupData.getOutputWavFile().toString()).start();
 			testText.append("done\n");
@@ -201,20 +201,20 @@ public class Main_WavBootLoader extends JPanel{
 			e1.printStackTrace();
 		}
 		System.out.println("done\n");
-		
+
 		System.out.println("playing wav-file\n");
     	new AePlayWave(setupData.getOutputWavFile().toString()).start();
 	}
-	
-	public static void main(String[] args) 
+
+	public static void main(String[] args)
 	{
     	Main_WavBootLoader w=new Main_WavBootLoader();
-    	
+
     	String property = "java.io.tmpdir";
     	String tempDir = System.getProperty(property);
 
     	System.out.println("convert hex-file to speaker sound : java -jar AudioBoot.jar testFile.hex");
-		
+
     	if(args.length>0) // command line arguments: run in shell, do not show window
         {
         	System.out.println("there are "+args.length+"command-line arguments.");
@@ -225,17 +225,17 @@ public class Main_WavBootLoader extends JPanel{
     	    String absolutePath = file.getAbsolutePath();
     	    String filePath = absolutePath.substring(0,absolutePath.lastIndexOf(File.separator));
 
-        	w.setupData.setInputHexFile(file); 
+        	w.setupData.setInputHexFile(file);
 
-        	w.setupData.setOutputWavFile(new File(filePath + File.separator + outputFileName));   	
-  	
+        	w.setupData.setOutputWavFile(new File(filePath + File.separator + outputFileName));
+
         	w.convertAndPlayWav();
         }
         else // no command line available arguments, run GUI
         {
         	w.showMainWindow();
         }
-    	
+
 		System.out.println("End");
 
 	}

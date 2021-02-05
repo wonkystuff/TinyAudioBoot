@@ -14,7 +14,7 @@
 #     make fuse    			# to set the clock generator, boot section size etc.
 #     make flash   			# to load the boot loader into flash
 #     make lock    			# to protect the boot loader from overwriting
-#     make disablereset		# for ATtiny85 target - to use external reset line for IO (CAUTION: this is not easy to enable again, see README) 
+#     make disablereset		# for ATtiny85 target - to use external reset line for IO (CAUTION: this is not easy to enable again, see README)
 
 F_CPU = 16500000
 
@@ -56,8 +56,8 @@ AVRSIZE= $(AVRBIN)/avr-size
 
 # Options:
 DEFINES = -DBOOTLOADER_ADDRESS=0x$(BOOTLOADER_ADDRESS) -DARDUINO=10801 -DARDUINO_AVR_COCOMAKE7 -DARDUINO_ARCH_AVR -DF_CPU=$(F_CPU)
-CPPFLAGS = -c -g -Os -w -std=gnu++11 -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -I. -mmcu=$(DEVICE) $(DEFINES) $(ARDUINO_BOARD_INCLUDES) 
-CFLAGS = -c -g -Os -w -std=gnu11 -ffunction-sections -fdata-sections -MMD -I. -mmcu=$(DEVICE) $(DEFINES) $(ARDUINO_BOARD_INCLUDES) 
+CPPFLAGS = -c -g -Os -w -std=gnu++11 -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -I. -mmcu=$(DEVICE) $(DEFINES) $(ARDUINO_BOARD_INCLUDES)
+CFLAGS = -c -g -Os -w -std=gnu11 -ffunction-sections -fdata-sections -MMD -I. -mmcu=$(DEVICE) $(DEFINES) $(ARDUINO_BOARD_INCLUDES)
 LDFLAGS = -Wl,--relax,--gc-sections -Wl,--section-start=.text=$(BOOTLOADER_ADDRESS),-Map=main.map
 
 OBJECTS = main.o
@@ -91,16 +91,13 @@ all: main.hex
 
 flash:	all
 	$(AVRDUDE) $(FUSEOPT)
-	$(AVRDUDE) -Uflash:w:main.hex:i 
+	$(AVRDUDE) -Uflash:w:main.hex:i
 
 readflash:
 	$(AVRDUDE) -U flash:r:read.hex:i
 
 fuse:
 	$(AVRDUDE) $(FUSEOPT)
-	
-disablereset:
-	$(AVRDUDE) $(FUSEOPT_t85_DISABLERESET)
 
 lock:
 	$(AVRDUDE) $(LOCKOPT)
