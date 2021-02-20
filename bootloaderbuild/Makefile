@@ -47,7 +47,7 @@ ARDUINO_BOARD_PINS = /Users/xcorex/Library/Arduino15/packages/ATTinyCore/hardwar
 ARDUINO_BOARD_INCLUDES = -I$(ARDUINO_BOARD_CORE) -I$(ARDUINO_BOARD_PINS) -I../TinyAudioBoot
 
 # Tools:
-AVRDUDE = $(AVRBIN)/avrdude $(PROGRAMMER) -p $(DEVICE) -C $(AVRDIR)/etc/avrdude.conf
+AVRDUDE = $(AVRBIN)/avrdude $(PROGRAMMER) -B4 -p $(DEVICE) -C $(AVRDIR)/etc/avrdude.conf
 CC = $(AVRBIN)/avr-gcc
 CPP = $(AVRBIN)/avr-g++
 AVROBJCOPY= $(AVRBIN)/avr-objcopy
