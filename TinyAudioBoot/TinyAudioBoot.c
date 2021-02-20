@@ -13,7 +13,7 @@
   input pin:  should be connected to a voltage divider.
   output pin: LED for status indication of the bootloader
 
-  The input pin is also connected by a 10nF capacitor to the PC line out
+  The input pin is also connected by a 100nF capacitor to the PC line out
 
   The Atmega168 seems to have the switching voltage level at 2.2V
   The Atmega8 at 1.4V
@@ -167,16 +167,15 @@ uint16_t resetVector RESET_SECTION = RJMP + BOOTLOADER_ADDRESS / 2;
 
 #ifdef USELED
 
-    #define LEDPORT      ( 1<<PB1 ); // PB1 is ATTiny85 pin 6
-    #define INITLED()    { DDRB|=LEDPORT; }
+    #define LEDPORT      ( 1u << PB1 ); // PB1 is ATTiny85 pin 6
+    #define INITLED()    { DDRB |= LEDPORT; }
 
-    #define LEDON()      { PORTB|=LEDPORT;}
-    #define LEDOFF()     { PORTB&=~LEDPORT;}
-    #define TOGGLELED()  { PORTB^=LEDPORT;}
+    #define LEDON()      { PORTB |= LEDPORT;}
+    #define LEDOFF()     { PORTB &= ~LEDPORT;}
+    #define TOGGLELED()  { PORTB ^= LEDPORT;}
 
 #else
 
-    #define LEDPORT
     #define INITLED()
 
     #define LEDON()
@@ -185,17 +184,16 @@ uint16_t resetVector RESET_SECTION = RJMP + BOOTLOADER_ADDRESS / 2;
 
 #endif
 
-#ifdef WONKYSTUFF
-#define BOOTCHECKPIN    (1<<PB0)
+#ifdef  WONKYSTUFF
+#define BOOTCHECKPIN    (1u << PB0)
 #define INITBOOTCHECK() {DDRB &= ~BOOTCHECKPIN; PORTB |= BOOTCHECKPIN; } // boot-check pin is input
+#else
+#define INITBOOTCHECK()
 #endif
 
-#define INPUTAUDIOPIN   (1<<PB3) // PB3 is ATTiny85 pin 2
-#define PINVALUE        (PINB&INPUTAUDIOPIN)
-#define INITAUDIOPORT() {DDRB&=~INPUTAUDIOPIN;} // audio pin is input
-
-#define PINLOW          (PINVALUE==0)
-#define PINHIGH         (!PINLOW)
+#define INPUTAUDIOPIN   (1u << PB3) // PB3 is ATTiny85 pin 2
+#define PINVALUE        (PINB & INPUTAUDIOPIN)
+#define INITAUDIOPORT() {DDRB &= ~INPUTAUDIOPIN;} // audio pin is input
 
 #define WAITBLINKTIME   10000
 #define BOOT_TIMEOUT    10
@@ -210,24 +208,24 @@ uint16_t resetVector RESET_SECTION = RJMP + BOOTLOADER_ADDRESS / 2;
 #define TIMER TCNT0 // we use timer1 for measuring time
 
 // frame format definition: indices
-#define COMMAND         0
-#define PAGEINDEXLOW    1  // page address lower part
-#define PAGEINDEXHIGH   2  // page address higher part
-#define LENGTHLOW       3
-#define LENGTHHIGH      4
-#define CRCLOW          5  // checksum lower part
-#define CRCHIGH         6  // checksum higher part
-#define DATAPAGESTART   7  // start of data
+#define COMMAND         0u
+#define PAGEINDEXLOW    1u  // page address lower part
+#define PAGEINDEXHIGH   2u  // page address higher part
+#define LENGTHLOW       3u
+#define LENGTHHIGH      4u
+#define CRCLOW          5u  // checksum lower part
+#define CRCHIGH         6u  // checksum higher part
+#define DATAPAGESTART   7u  // start of data
 #define PAGESIZE        SPM_PAGESIZE
 #define FRAMESIZE       (PAGESIZE+DATAPAGESTART) // size of the data block to be received
 
 // bootloader commands
-#define NOCOMMAND       0
-#define TESTCOMMAND     1
-#define PROGCOMMAND     2
-#define RUNCOMMAND      3
-#define EEPROMCOMMAND   4
-#define EXITCOMMAND     5
+#define NOCOMMAND       0u
+#define TESTCOMMAND     1u
+#define PROGCOMMAND     2u
+#define RUNCOMMAND      3u
+#define EEPROMCOMMAND   4u
+#define EXITCOMMAND     5u
 
 uint8_t FrameData[ FRAMESIZE ];
 
@@ -256,7 +254,7 @@ void (*start_appl_main) (void);
 //https://www.youtube.com/watch?v=DO-D6YmRpJk
 
 void
-eeprom_write(unsigned short address, unsigned char data)
+eeprom_write(uint16_t address, uint8_t data)
 {
     while(EECR & (1<<EEPE));
 
@@ -492,7 +490,7 @@ boot_program_page (uint32_t page, uint8_t *buf)
 }
 
 void
-resetRegister()
+resetRegister(void)
 {
     DDRB = 0;
     cli();
@@ -500,7 +498,7 @@ resetRegister()
 }
 
 void
-exitBootloader()
+exitBootloader(void)
 {
     memcpy_P (&start_appl_main, (PGM_P) BOOTLOADER_FUNC_ADDRESS, sizeof (start_appl_main));
 
@@ -552,7 +550,9 @@ a_main(void)
         // leave bootloader and run program
         exitBootloader();
     }
-#else
+
+#else   // !WONKYSTUFF
+
   uint8_t timeout = BOOT_TIMEOUT;
 
   p = PINVALUE;
@@ -667,9 +667,7 @@ main(void)
 {
     INITLED();
     INITAUDIOPORT();
-#ifdef WONKYSTUFF
     INITBOOTCHECK();
-#endif
 
     // Timer 2 normal mode, clk/8, count up from 0 to 255
     // ==> frequency @16MHz= 16MHz/8/256=7812.5Hz
