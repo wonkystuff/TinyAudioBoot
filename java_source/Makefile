@@ -10,17 +10,14 @@ JFLAGS = --release 8 -classpath .
 JC = javac
 .SUFFIXES: .java .class
 
-CLASSES=hexTools/IntelHexFormat.java controllPanel/Main_WavBootLoader.java \
-		controllPanel/Model_ProgrammParameters.java wavCreator/WavCodeGenerator.java \
-		wavCreator/BootFrame.java wavCreator/HexToSignal.java waveFile/WavFile.java \
-		waveFile/WriteExample.java waveFile/WavFileException.java \
-		waveFile/ReadExample.java waveFile/AePlayWave.java
+SRC=wavCreator/WavCodeGenerator.java
 
 # Usage:
 #    java -cp . controllPanel/Main_WavBootLoader
 #    java -jar hex2wav.jar <hexfilename>
 
-hex2wav.jar: $(CLASSES:.java=.class)
+hex2wav.jar: $(SRC:.java=.class)
+	@echo $<
 	jar cvfm $@ MANIFEST.MF */*.class
 
 clean:
