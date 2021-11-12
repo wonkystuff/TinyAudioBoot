@@ -7,6 +7,12 @@
 /build/main.hex
 /build/TinyAudioBoot.d
 /build/TinyAudioBoot.o
+/bootloaderbuild/main.bin
+/bootloaderbuild/main.cpp.lst
+/bootloaderbuild/main.d
+/bootloaderbuild/main.hex
+/bootloaderbuild/main.map
+/bootloaderbuild/main.o
 /java_source/test.wav
 /build/test.wav
-java_source/*/*.class
+/java_source/*/*.class
