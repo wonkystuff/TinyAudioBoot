@@ -16,7 +16,7 @@
 #     make lock    			# to protect the boot loader from overwriting
 #     make disablereset		# for ATtiny85 target - to use external reset line for IO (CAUTION: this is not easy to enable again, see README)
 
-F_CPU = 16500000
+F_CPU = 16000000
 
 ARDUINOAPPDIR = /Applications/Arduino.app
 AVRDIR		= $(ARDUINOAPPDIR)/Contents/Java/hardware/tools/avr
