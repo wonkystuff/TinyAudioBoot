@@ -16,6 +16,16 @@
 #     make lock    			# to protect the boot loader from overwriting
 #     make disablereset		# for ATtiny85 target - to use external reset line for IO (CAUTION: this is not easy to enable again, see README)
 
+###############################################################################
+# Additional:
+#
+# if building for wonkystuff 'Core' devices, then invoke as follows:
+#  make clean main.hex flash
+#
+# if building for the 'MMO' device, then invoke as follows:
+# make clean main.hex flash MMO=1
+#
+
 F_CPU = 16000000
 
 ARDUINOAPPDIR = /Applications/Arduino.app
@@ -56,6 +66,9 @@ AVRSIZE= $(AVRBIN)/avr-size
 
 # Options:
 DEFINES = -DBOOTLOADER_ADDRESS=0x$(BOOTLOADER_ADDRESS) -DARDUINO=10801 -DARDUINO_AVR_COCOMAKE7 -DARDUINO_ARCH_AVR -DF_CPU=$(F_CPU)
+ifdef MMO
+DEFINES += -DMMO
+endif
 CPPFLAGS = -c -g -Os -w -std=gnu++11 -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -I. -mmcu=$(DEVICE) $(DEFINES) $(ARDUINO_BOARD_INCLUDES)
 CFLAGS = -c -g -Os -w -std=gnu11 -ffunction-sections -fdata-sections -MMD -I. -mmcu=$(DEVICE) $(DEFINES) $(ARDUINO_BOARD_INCLUDES)
 LDFLAGS = -Wl,--relax,--gc-sections -Wl,--section-start=.text=$(BOOTLOADER_ADDRESS),-Map=main.map

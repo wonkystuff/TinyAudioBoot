@@ -85,6 +85,7 @@
   v3.1  04.2.2017 C. -H-A-B-E-R-E-R-  clean reset vector added, description added, pins rerouted
   v3.2  18.7.2017 C. -P-r-a-k-o-s-a-  various refactor, added eeprom write mode, makefile for compiling using arduino ide toolchain
   v3.3  03.02.2021 J. T-u-f-f-e-n-    bootloader entered if button pressed rather than time-delayed.
+  v3.4  28.03.2025 J. T-u-f-f-e-n-    bootloader entered if button pressed when powered on for mmo micro-module.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -166,8 +167,11 @@
 uint16_t resetVector RESET_SECTION = RJMP + BOOTLOADER_ADDRESS / 2;
 
 #ifdef USELED
-
+#ifdef MMO
+    #define LEDPORT      ( 1u << PB0 ); // PB0 is ATTiny85 pin 5
+#else
     #define LEDPORT      ( 1u << PB1 ); // PB1 is ATTiny85 pin 6
+#endif
     #define INITLED()    { DDRB |= LEDPORT; }
 
     #define LEDON()      { PORTB |= LEDPORT;}
@@ -185,13 +189,23 @@ uint16_t resetVector RESET_SECTION = RJMP + BOOTLOADER_ADDRESS / 2;
 #endif
 
 #ifdef  WONKYSTUFF
+
+#ifdef MMO
+#define BOOTCHECKPIN    (1u << PB1)
+#else
 #define BOOTCHECKPIN    (1u << PB0)
+#endif
+
 #define INITBOOTCHECK() {DDRB &= ~BOOTCHECKPIN; PORTB |= BOOTCHECKPIN; } // boot-check pin is input
 #else
 #define INITBOOTCHECK()
 #endif
 
+#ifdef MMO
+#define INPUTAUDIOPIN   (1u << PB2) // PB2 is ATTiny85 pin 7
+#else
 #define INPUTAUDIOPIN   (1u << PB3) // PB3 is ATTiny85 pin 2
+#endif
 #define PINVALUE        (PINB & INPUTAUDIOPIN)
 #define INITAUDIOPORT() {DDRB &= ~INPUTAUDIOPIN;} // audio pin is input
 
@@ -229,7 +243,7 @@ uint16_t resetVector RESET_SECTION = RJMP + BOOTLOADER_ADDRESS / 2;
 
 uint8_t FrameData[ FRAMESIZE ];
 
-#define FLASH_RESET_ADDR        0x0000                 // address of reset vector (in bytes)
+#define FLASH_RESET_ADDR        0x0000                // address of reset vector (in bytes)
 #define BOOTLOADER_STARTADDRESS BOOTLOADER_ADDRESS    // start address:
 #define BOOTLOADER_ENDADDRESS   0x2000                // end address:   0x2000 = 8192
                                                       // this is the size of the Attiny85 flash in bytes
@@ -534,7 +548,11 @@ a_main(void)
 #ifdef WONKYSTUFF
     // wait whilst the reset button is held down (and turn on the LED to say that we're waiting)
     uint32_t lPress=0;
+#ifdef MMO
+    while ((PINB & BOOTCHECKPIN))
+#else
     while (!(PINB & BOOTCHECKPIN))
+#endif
     {
         LEDON();           // Switch on the LED
         if (++lPress > 3000000)         // pretty arbitrary count
